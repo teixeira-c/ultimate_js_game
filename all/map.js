@@ -129,7 +129,7 @@ _Map = (function() {
 				continue;
 			_l = v.layers[index];
 
-			if (img = myRsc.get(_l.rsc))
+			if (img = myRsc.get('img', _l.rsc))
 				ctx.drawImage(img, 0, 0, img.width, img.height);
 		}
 

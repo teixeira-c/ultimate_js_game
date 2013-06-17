@@ -54,13 +54,14 @@ _Shape = (function() {
 		this.velocity = {x: 0, y: 0};
 		this.colliding = false;
 		this.is_decor = false;
+		this.rsc = opts.rsc || false;
 
 		// world options
 		this.collision = opts.collision || true;
 		this.constrain = opts.constrain || false;
 
 		// bounds
-		this.helpers = opts.helpers || true 
+		this.helpers = opts.helpers || true
 		this.trueBounds = false; // Fit to shape or use only _bounds
 		this.bounds = opts.bounds || false;
 		this._bounds = {
@@ -112,6 +113,11 @@ _Shape = (function() {
 		}
       	ctx.closePath();
 		ctx.fill();
+
+		if (this.rsc)
+		{
+			this.rsc.render();
+		}
 
 		ctx.restore();
 	}
@@ -227,7 +233,7 @@ _Shape = (function() {
 			if (((_b.rmin.x > _oib.rmax.x) || (_b.rmax.x < _oib.rmin.x))
 				|| ((_b.rmin.y > _oib.rmax.y) || (_b.rmax.y < _oib.rmin.y)))
 			{
-				
+
 			}
 			else{
 				this.colliding = true;
@@ -261,7 +267,7 @@ _Shape = (function() {
 
 		vX = (vX + ((vX * this.phy.restitution)*-1) / (this.phy.restitution * this.phy.mass) * -1);
 		vY = (vY + ((vY * this.phy.restitution)*-1) / (this.phy.restitution * this.phy.mass) * -1);
-		
+
 		vY -= vY;
 
 		//this.velocity.x = vX;
