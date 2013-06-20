@@ -6,7 +6,7 @@ var anime_state = true;
 var request_id;
 
 _Tile = (function() {
-	function Tile(x, y, tw, th) {
+	function Tile(x, y, tw, th, rsc) {
 		return new _Shape({
 			x: x, y: y, fillColor: '#ddd',
 			points: [
@@ -15,7 +15,7 @@ _Tile = (function() {
 				new _Point(tw,th),
 				new _Point(0,th),
 			],
-			restitution: 0.1, pinned: true
+			restitution: 0.1, pinned: true, rsc: rsc
 		});
 	}
 	return Tile;
@@ -74,7 +74,10 @@ _Map = (function() {
 				_cc = _cr[col];
 				_cw = col * _tw;
 				if (_cc != "" && _cc != " ")
-					v.tiles.push(new _Tile( _cw, _ch, _tw, _th));
+				{
+					img = myRsc.get('img', _cc);
+					v.tiles.push(new _Tile( _cw, _ch, _tw, _th, img));
+				}
 			}
 		}
 		v.inited = true;
@@ -145,6 +148,7 @@ _Map = (function() {
 
 		for (var index in v.tiles) {
 			v.tiles[index].draw();
+			v.tiles[index].apply_old();
 		}
 	}
 	return Map;

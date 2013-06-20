@@ -23,7 +23,7 @@ _Point = (function() {
 _Shape = (function() {
 	function Shape(opts) {
 		if (!opts || !opts.points)
-			return false;
+			throw "no points given";
 
 		this.id = o_id++;
 
@@ -35,6 +35,7 @@ _Shape = (function() {
 		this.phy.Cd = opts.cd || 1; // Drag force
 		this.phy.friction = 1.05; // friction coef
 		this.phy.A = 0;
+		this.phy.env = __e.get('default');
 
 		// shape
 		this.points = opts.points;
@@ -48,20 +49,23 @@ _Shape = (function() {
 		// state
 		this.state = 'static';
 		this.size = {x: 0, y: 0};
-		this.old =  new _Point(opts.x, opts.y);
-		this.oldState = this.state;
 		this.position = new _Point(opts.x, opts.y);
 		this.velocity = {x: 0, y: 0};
 		this.colliding = false;
 		this.is_decor = false;
 		this.rsc = opts.rsc || false;
+		this.old =  {
+			pos: new _Point(opts.x, opts.y),
+			state: this.state,
+			cld: false
+		};
 
 		// world options
 		this.collision = opts.collision || true;
 		this.constrain = opts.constrain || false;
 
 		// bounds
-		this.helpers = opts.helpers || true
+		this.helpers = opts.helpers || true;
 		this.trueBounds = false; // Fit to shape or use only _bounds
 		this.bounds = opts.bounds || false;
 		this._bounds = {
@@ -74,11 +78,15 @@ _Shape = (function() {
 		this._sl.push(this);
 	}
 
-	Shape.prototype.do = function() {
-		this.old.set(this.position.x, this.position.y);
-		this.oldState = this.state;
-		this.oldCollide = this.colliding;
+	Shape.prototype.apply_old = function() {
+		this.old.pos.set(this.position.x, this.position.y);
+		this.old.state = this.state;
+		this.old.cld = this.colliding;
+		this.colliding = false;
+	}
 
+	Shape.prototype.do = function() {
+		this.apply_old();
 		this.apply_bounds();
 
 		if (this.constrain)
@@ -102,21 +110,27 @@ _Shape = (function() {
 		ctx.translate(this.position.x, this.position.y);
 
 		// Draw box
-		if (this.helpers)
-			this.display_helpers();
+/*		if (this.helpers)
+			this.display_helpers();*/
 
-		ctx.fillStyle = this.fillColor;
-		// draw path
-      	ctx.beginPath();
-		for (_i = 0; _i < this.ptslen; ++_i) {
-			ctx.lineTo(this.points[_i].x, this.points[_i].y);
-		}
-      	ctx.closePath();
-		ctx.fill();
 
-		if (this.rsc)
+		if (typeof this.rsc == 'object')
 		{
-			this.rsc.render();
+			if (typeof this.rsc.render == 'function')
+				this.rsc.render();
+			else{
+				ctx.drawImage(this.rsc,0, 0,36, 36);
+			}
+		}
+		else{
+			ctx.fillStyle = this.fillColor;
+			// draw path
+	      	ctx.beginPath();
+			for (_i = 0; _i < this.ptslen; ++_i) {
+				ctx.lineTo(this.points[_i].x, this.points[_i].y);
+			}
+	      	ctx.closePath();
+			ctx.fill();
 		}
 
 		ctx.restore();
@@ -176,20 +190,20 @@ _Shape = (function() {
 		var _phy, Fx, Fy, ax, ay;
 		_phy = this.phy;
 
-		_Fx = -0.5 * _phy.Cd * _phy.A * this.env.rho * (this.velocity.x * this.velocity.x) * (this.velocity.x / Math.abs(this.velocity.x));
-		_Fy = -0.5 * _phy.Cd * _phy.A * this.env.rho * (this.velocity.y * this.velocity.y) * (this.velocity.y / Math.abs(this.velocity.y));
+		_Fx = -0.5 * _phy.Cd * _phy.A * _phy.env.rho * (this.velocity.x * this.velocity.x) * (this.velocity.x / Math.abs(this.velocity.x));
+		_Fy = -0.5 * _phy.Cd * _phy.A * _phy.env.rho * (this.velocity.y * this.velocity.y) * (this.velocity.y / Math.abs(this.velocity.y));
 		_Fx = (isNaN(_Fx) ? 0 : _Fx);
 		_Fy = (isNaN(_Fy) ? 0 : _Fy);
 
 		// Calculate acceleration ( F = ma )
 		_ax = _Fx / _phy.mass;
-		_ay = this.env.ag + (_Fy / _phy.mass);
+		_ay = 9.81 + (_Fy / _phy.mass);
 
-		this.velocity.x += _ax * this.env.fps;
-		this.velocity.y += _ay * this.env.fps;
+		this.velocity.x += _ax * __g.fps;
+		this.velocity.y += _ay * __g.fps;
 
-		this.position.x += Math.round(this.velocity.x * this.env.fps * 100);
-		this.position.y += Math.round(this.velocity.y * this.env.fps * 100);
+		this.position.x += Math.round(this.velocity.x * __g.fps * 100);
+		this.position.y += Math.round(this.velocity.y * __g.fps * 100);
 	}
 
 	Shape.prototype.apply_friction = function() {
@@ -233,7 +247,6 @@ _Shape = (function() {
 			if (((_b.rmin.x > _oib.rmax.x) || (_b.rmax.x < _oib.rmin.x))
 				|| ((_b.rmin.y > _oib.rmax.y) || (_b.rmax.y < _oib.rmin.y)))
 			{
-
 			}
 			else{
 				this.colliding = true;
@@ -295,7 +308,6 @@ _Shape = (function() {
 			return;*/
 	}
 
-	Shape.prototype.env = myEnv;
 	Shape.prototype._sl = [];
 	return Shape;
 })();

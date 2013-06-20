@@ -6,21 +6,32 @@ var request_id;
 
 
 /************************ RESSOURCES *****************/
+var __e, __c;
 var myRsc = new _Ressources();
 myRsc.load({
 	img: [
-		['mario.png', 'sprt_mario']
+		['mario.png', 'sprt_mario'],
+		['tiles.jpg', '#']
 	],
 	map: [
 		['lvl_2']
 	]
 }, function(){
-	myRsc.sprites('mario_walking', 'sprt_mario', new _Point(0,0), new _Point(24,29), 6);
-	onload();
+	onReady();
 });
 
+function onReady() {
+	__g = new Game({
+		el: "myCanvas",
+		debug: true
+	});
+	__e = new Env({
+		name: "default"
+	});
 
-function onload() {
+	/************************ SPRITES *****************/
+	myRsc.sprites('mario_walking', 'sprt_mario', new _Point(0,0), new _Point(24,29), 6);
+
 	/************************ MAP *****************/
 	var myMap = new _Map(0, 0);
 	myMap.add_view('lvl_2', myRsc.get('map','lvl_2'));
@@ -44,9 +55,33 @@ function onload() {
 	});*/
 	//myObjects.push(obj1);
 
+	var char2 = new _Mario({
+		x: 90, y: 105,
+		points: [
+			new _Point(0,0),
+			new _Point(24,0),
+			new _Point(24,29),
+			new _Point(0,29),
+		],
+	});
+	myObjects.push(char2);
+
+/*	var char1 = new _Char({
+		x: 205, y: 185, fillColor: '#fff',
+		mass: 5, restitution: 0.5, constrain: true,
+		rsc: myRsc.get('sprites', 'mario_walking'),
+		points: [
+			new _Point(0,0),
+			new _Point(24,0),
+			new _Point(24,29),
+			new _Point(0,29),
+		],
+	});
+	myObjects.push(char1);
+
 	var obj2 = new _Shape({
 		x: 275, y: 185, fillColor: '#fff',
-		mass: 5, restitution: 0.5, constrain: true,
+		mass: 5, restitution: 0, constrain: true,
 		rsc: myRsc.get('sprites', 'mario_walking'),
 		points: [
 			new _Point(0,0),
@@ -57,17 +92,17 @@ function onload() {
 	});
 	myObjects.push(obj2);
 
-	var obj2 = new _Shape({
+	var obj3 = new _Shape({
 		x: 375, y: 185, fillColor: '#57d68d',
+		mass: 5, restitution: 0.3, constrain: true,
 		points: [
 			new _Point(0,0),
 			new _Point(30,0),
 			new _Point(30,50),
 			new _Point(0,50),
 		],
-		mass: 5, restitution: 0.5, constrain: true
 	});
-	myObjects.push(obj2);
+	myObjects.push(obj3);*/
 
 
 
