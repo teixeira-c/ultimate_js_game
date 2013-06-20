@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>il é tro bien se jeut lol</title>
+
+<style>
+canvas{
+	border:1px solid black;	
+	background:#CCC;
+}
+</style>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/move.js"></script>
+</head>
+<body onload="init()">
+
+<canvas id="example" width="825" height="525" tabindex="1">
+Votre navigateur ne support pas le HTML 5
+</canvas>
+<script type="text/javascript">	
+
+	var TileSize = 25;
+	var canvas = document.getElementById("example");	
+	var context = canvas.getContext("2d");	
+	var env = new AerialEnvironment();
+function init(){
+
+	setInterval(function(){refreshLoop(env)}, 1000/30);
+	document.addEventListener('keydown', keyPress, false);
+ 	document.addEventListener('keyup', keyUp, false);
+}
+</script>
+
+</body>
+</html>
