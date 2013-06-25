@@ -1,30 +1,68 @@
 _Mario = (function() {
 	function Mario(opts) {
 		opts.restitution = 0.05;
-		opts.constrain = false;
-		opts.anim = {
-			walking_right: myRsc.get('sprites', 'mario_walking'),
+		opts.constrain = true;
+		opts.sprites = {
+			default: __g.rsc.get('sprites', 'mario_idle'),
+			walking_right: __g.rsc.get('sprites', 'mario_walking'),
+			jumping: __g.rsc.get('sprites', 'mario_jumping'),
+		};
+		opts.fillColor = '#69D2E7';
+		this.jump = {
+			double: true,
+			min: 300,
+			last: 0
 		}
 
 		_Char.call(this, opts);
-		console.log(this);
+		this.__sprite('default');
+
 		that = this;
-		__g.register('RIGHT', function() {
-			that.position.x += 5;
-			that.velocity.x += 1;
-			that.play('walking_right');
+		__g.input.register('RIGHT', function() {
+			if (!that.actions.jumping)
+				that.__action('walking', 'walking_right');
+			that.position.x += 2;
 		}, function(){
-			that.rsc.index = 0;
-			that.rsc = false;
+			if (!that.actions.jumping)
+				that.__sprite('default');
 		});
 
-		__g.register('LEFT', function() {
-			that.position.x -= 5;
-			that.play('walking_right');
+		__g.input.register('LEFT', function() {
+			if (!that.actions.jumping)
+				that.__action('walking', 'walking_right');
+			that.position.x -= 2;
+		}, function(){
+			if (!that.actions.jumping)
+				that.__sprite('default');
+		});
+
+		__g.input.register('SPACE UP', function() {
+			if (that.motion.dir.v == 'static' && ((__g.time - that.jump.last) > that.jump.min))
+			{
+				that.__action('jumping', 'jumping');
+				that.position.y -= 1;
+				that.velocity.y = -4;
+				that.jump.last = new Date().getTime();
+			}
 		});
 	}
 
 	Mario.prototype = _Char.prototype;
+
+	Mario.prototype.__onenter = function() {
+
+		if (this.actions.jumping && this.motion.dir.v == 'static'){
+			this.actions.jumping = false;
+			that.__sprite('default');
+		}
+
+		if (this.motion.is == false)
+		{
+			this.actions = {};
+			that.__sprite('default');
+			return;
+		}
+	}
 
 	return Mario;
 })();

@@ -1,14 +1,41 @@
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext("2d");
-var ctx_height = canvas.height;
-var ctx_width = canvas.width;
-var request_id;
+
+/************************ New Game *****************/
+var __g = new Game({
+	el: "myCanvas",
+	debug: true,
+	map: new _Map()
+});
 
 
-/************************ RESSOURCES *****************/
-var __e, __c;
-var myRsc = new _Ressources();
-myRsc.load({
+// Main Loading Screen
+__g.rsc.screen('load_main', function(e){
+	__g.ctx.globalAlpha = 0.4;
+	__g.ctx.clearRect(0, 0, __g.size.x, __g.size.y);
+
+	__g.ctx.fillStyle = "#444";
+	__g.ctx.font = "normal 45px Segoe UI";
+	__g.ctx.fillText('LOADING', __g.size.x/2 - 100, __g.size.y/2);
+
+	__g.ctx.fillStyle = "#aaa";
+	__g.ctx.font = "normal 11px Segoe UI";
+	__g.ctx.fillText(e.pct +'%', __g.size.x/2 - 30, __g.size.y/2 + 30);
+
+	__g.ctx.fillStyle = '#ccc';
+	__g.ctx.beginPath();
+	__g.ctx.moveTo(0, __g.size.y/2 + 10);
+	__g.ctx.lineTo(__g.size.x, __g.size.y/2 + 10);
+	__g.ctx.stroke();
+
+	__g.ctx.globalAlpha = 0.7;
+	__g.ctx.fillStyle = '#FF0000';
+	__g.ctx.beginPath();
+	__g.ctx.moveTo(0, __g.size.y/2 + 10);
+	__g.ctx.lineTo((__g.size.x /100 ) * e.pct, __g.size.y/2 + 10);
+	__g.ctx.stroke();
+});
+
+// Load ressources
+__g.rsc.load({
 	img: [
 		['mario.png', 'sprt_mario'],
 		['tiles.jpg', '#']
@@ -17,29 +44,24 @@ myRsc.load({
 		['lvl_2']
 	]
 }, function(){
-	onReady();
-});
+	setTimeout(onReady, 500);
+}, 'load_main');
 
+/************************ READY *****************/
 function onReady() {
-	__g = new Game({
-		el: "myCanvas",
-		debug: true
-	});
-	__e = new Env({
-		name: "default"
-	});
 
 	/************************ SPRITES *****************/
-	myRsc.sprites('mario_walking', 'sprt_mario', new _Point(0,0), new _Point(24,29), 6);
+	__g.rsc.sprites('mario_idle', 'sprt_mario', new _Point(0,0), new _Point(24,29), 1);
+	__g.rsc.sprites('mario_walking', 'sprt_mario', new _Point(0,30), new _Point(24,29), 6);
+	__g.rsc.sprites('mario_jumping', 'sprt_mario', new _Point(0,62), new _Point(24,29), 3);
 
 	/************************ MAP *****************/
-	var myMap = new _Map(0, 0);
-	myMap.add_view('lvl_2', myRsc.get('map','lvl_2'));
-	myMap.set_current_view('lvl_2');
+	__g.map = new _Map();
+	__g.map.add_view('lvl_2', __g.rsc.get('map','lvl_2'));
+	__g.map.set_current_view('lvl_2');
 
 
 	/************************ SHAPE *****************/
-	var myObjects = [];
 	/*var obj1 = new _Shape({
 		x: 250, y: 250, fillColor: '#0DB2AC',
 		points: [
@@ -56,15 +78,15 @@ function onReady() {
 	//myObjects.push(obj1);
 
 	var char2 = new _Mario({
-		x: 90, y: 105,
+		x: 190, y: 515,
 		points: [
 			new _Point(0,0),
-			new _Point(24,0),
-			new _Point(24,29),
-			new _Point(0,29),
+			new _Point(35,0),
+			new _Point(35,35),
+			new _Point(0,35),
 		],
 	});
-	myObjects.push(char2);
+	__g.myShapes.push(char2);
 
 /*	var char1 = new _Char({
 		x: 205, y: 185, fillColor: '#fff',
@@ -103,26 +125,35 @@ function onReady() {
 		],
 	});
 	myObjects.push(obj3);*/
+	__g.loop = draw;
+	__g.play();
+}
 
 
 
-	/************************ DRAW *****************/
-	var length = myObjects.length;
-	function draw()
-	{
-		request_id =  requestAnimationFrame(draw, ctx);
-		ctx.clearRect(0, 0, ctx_width, ctx_height);
+/************************ DRAW *****************/
+var draw = function()
+{
+	__g.play();
+	__g.time = new Date().getTime();
+	__g.ctx.clearRect(0, 0, __g.size.x, __g.size.y);
 
+	//myMap.draw_layers('background');
 
-		//myMap.draw_layers('background');
-		myMap.draw_tiles();
-		for (var index = 0; index < length; ++index) {
-			myObjects[index].do();
-		}
+	__g.input.onFrame();
 
-		//myMap.draw_layers('foreground');
+	var length = __g.myShapes.length;
 
-		//window.cancelAnimationFrame(request_id);
+	for (var index = 0; index < length; ++index) {
+		__g.myShapes[index].compute();
 	}
-	draw();
+	__g.map.draw_tiles();
+
+	for (var index = 0; index < length; ++index) {
+		__g.myShapes[index].draw();
+	}
+
+	//myMap.draw_layers('foreground');
+
+	//__g.stop();
 }
