@@ -2,7 +2,7 @@
 /************************ New Game *****************/
 var __g = new Game({
 	el: "myCanvas",
-	debug: true,
+	debug: false,
 	map: new _Map()
 });
 
@@ -78,7 +78,7 @@ function onReady() {
 	//myObjects.push(obj1);
 
 	var char2 = new _Mario({
-		x: 446, y: 515,
+		x: 16, y: 415,
 		points: [
 			new _Point(0,0),
 			new _Point(24,0),

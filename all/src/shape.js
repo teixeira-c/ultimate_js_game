@@ -107,14 +107,14 @@ _Shape = (function() {
 		if (this.__onframe)
 			this.__onframe();
 
-		if (this.constrain)
-			this.apply_constraint();
-
 		if (this.phy.gravity)
 			this.apply_gravity();
 
 		if (this.collision)
 			this.check_collision();
+
+		if (this.constrain)
+			this.clsnr.narrowToCanvas(this);
 
 		if (this.colliding.y)
 			this.apply_friction();
@@ -238,11 +238,11 @@ _Shape = (function() {
 		_ay = _phy.env.ag + (_Fy / _phy.mass);
 
 		this.velocity.x += _ax * __g.fps;
-		this.velocity.y += _ay * __g.fps;
+		if (!this.colliding.y)
+			this.velocity.y += _ay * __g.fps;
 
 		this.position.x += Math.round(this.velocity.x * __g.fps * 100);
-		if (!this.colliding.y)
-			this.position.y += Math.round(this.velocity.y * __g.fps * 100);
+		this.position.y += Math.round(this.velocity.y * __g.fps * 100);
 	}
 
 	Shape.prototype.apply_friction = function() {
@@ -251,26 +251,6 @@ _Shape = (function() {
 	}
 
 	Shape.prototype.apply_constraint = function() {
-		if (this.aabb.rmax.y >= __g.size.y) { // ground
-			this.velocity.y *= -1 * this.phy.restitution;
-			this.position.y = __g.size.y - this.aabb.max.y;
-			this.colliding.y = true;
-		} else if (this.aabb.rmin.y < 0 ){
-			this.velocity.y *= -this.phy.restitution;
-			this.colliding.y = true;
-		}
-		if (this.aabb.rmax.x >=  __g.size.x) { // right
-			this.velocity.x *= -1 * this.phy.restitution;
-			this.position.x =  __g.size.x - this.aabb.max.x;
-			this.colliding.x = true;
-		} else if (this.aabb.rmin.x <= 0) { // left
-			this.velocity.x *= -1 * this.phy.restitution;
-			this.position.x = 0;
-			this.colliding.x = true;
-		}
-
-		if (this.colliding.y || this.colliding.x)
-			this.colliding.state = true;
 	}
 
 	Shape.prototype.check_collision = function() {
