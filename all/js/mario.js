@@ -21,7 +21,7 @@ _Mario = (function() {
 		__g.input.register('RIGHT', function() {
 			if (!that.actions.jumping)
 				that.__action('walking', 'walking_right');
-			that.position.x += 2;
+			that.velocity.x = 0.9;
 		}, function(){
 			if (!that.actions.jumping)
 				that.__sprite('default');
@@ -30,7 +30,7 @@ _Mario = (function() {
 		__g.input.register('LEFT', function() {
 			if (!that.actions.jumping)
 				that.__action('walking', 'walking_right');
-			that.position.x -= 2;
+			that.velocity.x = -0.9;
 		}, function(){
 			if (!that.actions.jumping)
 				that.__sprite('default');

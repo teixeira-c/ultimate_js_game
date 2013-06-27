@@ -43,7 +43,7 @@ _Shape = (function() {
 		this.phy.mass = opts.mass || 1; // kg
 		this.phy.restitution = opts.restitution || 0.5; // Restitution
 		this.phy.Cd = opts.cd || 1; // Drag force
-		this.phy.friction = 1.05; // friction coef
+		this.phy.friction = 1.25; // friction coef
 		this.phy.A = 0;
 		this.phy.env = __g.env.get('default');
 
@@ -91,6 +91,8 @@ _Shape = (function() {
 		__g.shapes.push(this);
 	}
 
+	Shape.prototype.clsnr = Collisioner.prototype;
+
 	Shape.prototype.apply_old = function() {
 		this.old.pos.set(this.position.x, this.position.y);
 		this.old.motion = this.motion;
@@ -113,6 +115,9 @@ _Shape = (function() {
 
 		if (this.collision)
 			this.check_collision();
+
+		if (this.colliding.y)
+			this.apply_friction();
 
 		this.motion_state();
 
@@ -236,7 +241,8 @@ _Shape = (function() {
 		this.velocity.y += _ay * __g.fps;
 
 		this.position.x += Math.round(this.velocity.x * __g.fps * 100);
-		this.position.y += Math.round(this.velocity.y * __g.fps * 100);
+		if (!this.colliding.y)
+			this.position.y += Math.round(this.velocity.y * __g.fps * 100);
 	}
 
 	Shape.prototype.apply_friction = function() {
@@ -247,8 +253,7 @@ _Shape = (function() {
 	Shape.prototype.apply_constraint = function() {
 		if (this.aabb.rmax.y >= __g.size.y) { // ground
 			this.velocity.y *= -1 * this.phy.restitution;
-			this.apply_friction();
-			this.position.y = __g.size.y - (this.aabb.max.y+1);
+			this.position.y = __g.size.y - this.aabb.max.y;
 			this.colliding.y = true;
 		} else if (this.aabb.rmin.y < 0 ){
 			this.velocity.y *= -this.phy.restitution;
@@ -283,28 +288,25 @@ _Shape = (function() {
 			var _oib =_oi.aabb;
 			var cld = {x: null, y: null};
 
-			if (((_b.rmin.x > _oib.rmax.x) || (_b.rmax.x < _oib.rmin.x))
-				|| ((_b.rmin.y > _oib.rmax.y) || (_b.rmax.y < _oib.rmin.y)))
+			if (this.clsnr.isCandidate(_b, _oib))
 			{
 			}
 			else{
-				this.colliding.state = true;
+				//this.colliding.state = true;
 				_oi.colliding.state = true;
-				this.compute_collision(_oi);
+				this.clsnr.compute(this, _oi);
+				//__g.stop();
+				//break;
 			}
 		}
 	}
 	Shape.prototype.compute_collision = function(fs) {
-		// vector center to center
-		var c = this.center.x + this.position.x;
-		var c2c = new _Point(0,0);
-		c2c.x = (fs.center.x + fs.position.x) - (this.center.x + this.position.x);
-		c2c.y = (fs.center.y + fs.position.y) - (this.center.y + this.position.y);
+		//if (diff.x)
+			//this.position.x -= Math.abs(overlap.x);
 
-		// vector border to border
-		var b2b = new _Point(0,0);
-		b2b.x = Math.abs(c2c.x) - (this.width/2) - (fs.width/2);
-		b2b.y = Math.abs(c2c.y) - (this.height/2) - (fs.height/2);
+		//console.log(overlap.y, overlap.x, diff);
+
+/*		// vector border to border
 		console.log(b2b);
 
 
@@ -329,7 +331,7 @@ _Shape = (function() {
 			this.colliding.x = true;
 			//this.position.x = c2c.x > 0 ? fs.aabb.rmin.x - this.width : fs.aabb.rmax.x;
 
-		}
+		}*/
 /*		console.log(this.velocity, this.center, _oi.center);
 		console.log(this.center.x + __g.ctxW, this.center.y + __g.ctxH)
 		console.log(_oi.center.x + __g.ctxW, _oi.center.y + __g.ctxH)*/

@@ -78,12 +78,12 @@ function onReady() {
 	//myObjects.push(obj1);
 
 	var char2 = new _Mario({
-		x: 190, y: 515,
+		x: 446, y: 515,
 		points: [
 			new _Point(0,0),
-			new _Point(35,0),
-			new _Point(35,35),
-			new _Point(0,35),
+			new _Point(24,0),
+			new _Point(24,29),
+			new _Point(0,29),
 		],
 	});
 	__g.myShapes.push(char2);
