@@ -6,18 +6,10 @@ var Collisioner = (function() {
 				|| ((s1.rmin.y > s2.rmax.y) || (s1.rmax.y < s2.rmin.y)));
 	}
 
-	Collisioner.prototype.debug = function(s1) {
-		console.log('overlap', overlap.x, overlap.y,
-		            'diff', diff.x, diff.y,
-		            'pos', c2c.x, c2c.y,
-		            'velocity', s1.velocity.x, s1.velocity.y,
-		            'width', s1.width/2 + s2.width/2,
-		            'height', s1.height/2 + s2.height/2,
-		            'motion_v', s1.motion.dir.v,
-		            'motion_h', s1.motion.dir.h);
-	}
+	Collisioner.prototype.contrain = function(s1) {
+		if (!s1.has.contrain)
+			return;
 
-	Collisioner.prototype.narrowToCanvas = function(s1) {
 		s1.compute_aabb();
 		if (s1.aabb.rmax.y >= __g.size.y) { // ground
 			s1.velocity.y *= -1 * s1.phy.restitution;
@@ -41,9 +33,29 @@ var Collisioner = (function() {
 			s1.colliding.state = true;
 	}
 
-	Collisioner.prototype.compute = function(s1, s2) {
+	Collisioner.prototype.compute = function(s1) {
+		var i, slen;
+		slen = __g.shapes.length;
+
+		for (var i in __g.shapes) {
+			var s2 = __g.shapes[i];
+			if (s2.id === s1.id)
+				continue;
+
+			if (this.isCandidate(s1.aabb, s2.aabb))
+			{
+				continue;
+			}
+			else{
+				s1.colliding.state = true;
+				s2.colliding.state = true;
+				this.apply(s1, s2);
+			}
+		}
+	}
+
+	Collisioner.prototype.apply = function(s1, s2) {
 		// vector center to center
-		var c = s1.center.x + s1.position.x;
 		var c2c = new _Point(0,0);
 		c2c.x = (s2.center.x + s2.position.x) - (s1.center.x + s1.position.x);
 		c2c.y = (s2.center.y + s2.position.y) - (s1.center.y + s1.position.y);
@@ -61,17 +73,28 @@ var Collisioner = (function() {
 			s1.position.x += overlap.x;
 			s1.velocity.x *= s1.phy.restitution;
 			s1.colliding.x = true;
-		}
-		else if (overlap.x != 0 && overlap.y < 0 && Math.abs(c2c.y) > Math.abs(c2c.x)){
+		} else if (overlap.x != 0 && ((overlap.y < 0 && Math.abs(c2c.y) > Math.abs(c2c.x))
+		           || (!diff.x && diff.y > 0))){
 			if (c2c.y < 0) overlap.y *= -1;
-			s1.position.y += overlap.y;
-			if (s1.velocity < 0){
-				s1.velocity.y *= s1.phy.restitution;
+			if (s1.velocity.y < 0){
+				s1.position.y += overlap.y;
+				if (c2c.y < 0)
+					s1.velocity.y *= s1.phy.restitution;
+			} else {
+				s1.velocity.y = -1 * s1.phy.restitution;
+				s1.position.y += overlap.y;
 			}
 			s1.colliding.y = true;
+		} else {
+/*			console.log('overlap', overlap.x, overlap.y,
+			            'diff', diff.x, diff.y,
+			            'pos', c2c.x, c2c.y,
+			            'velocity', s1.velocity.x, s1.velocity.y,
+			            'width', s1.width/2 + s2.width/2,
+			            'height', s1.height/2 + s2.height/2,
+			            'motion_v', s1.motion.dir.v,
+			            'motion_h', s1.motion.dir.h);*/
 		}
-
-		//s1.old.pos = s1.position;
 	}
 
 	return Collisioner;

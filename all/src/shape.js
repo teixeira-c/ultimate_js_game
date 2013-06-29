@@ -37,11 +37,19 @@ _Shape = (function() {
 
 		this.id = o_id++;
 
+		this.has = {
+			gravity: opts.gravity || true,
+			friction: {x: true, y: true},
+			collision: opts.collision || true,
+			contrain: opts.contrain || false
+		}
+		if (opts.frictionY !== undefined) this.has.friction.y = opts.frictionY;
+		if (opts.frictionX !== undefined) this.has.friction.x = opts.frictionX;
+
 		// Physics
 		this.phy = {};
-		this.phy.gravity = opts.gravity || true;
 		this.phy.mass = opts.mass || 1; // kg
-		this.phy.restitution = opts.restitution || 0.5; // Restitution
+		this.phy.restitution = opts.restitution < 0 ? 0.5 : opts.restitution; // Restitution
 		this.phy.Cd = opts.cd || 1; // Drag force
 		this.phy.friction = 1.25; // friction coef
 		this.phy.A = 0;
@@ -58,8 +66,7 @@ _Shape = (function() {
 
 		// state
 		this.motion = {
-			is: 'static',
-			dir : {v: false, h: false}
+			state: 'static', x: false, y: false
 		};
 		this.size = {x: 0, y: 0};
 		this.position = new _Point(opts.x, opts.y);
@@ -74,10 +81,6 @@ _Shape = (function() {
 			cld: false,
 			velocity: new _Point(0, 0)
 		};
-
-		// world options
-		this.collision = opts.collision || true;
-		this.constrain = opts.constrain || false;
 
 		// bounds
 		this.trueBounds = false; // Fit to shape or use only _bounds
@@ -102,25 +105,30 @@ _Shape = (function() {
 	}
 
 	Shape.prototype.compute = function() {
-		this.compute_aabb();
-
+		// Execute an user function, before everything.
 		if (this.__onframe)
 			this.__onframe();
 
-		if (this.phy.gravity)
+		// Apply gravity to shapes
+		if (this.has.gravity)
 			this.apply_gravity();
 
-		if (this.collision)
-			this.check_collision();
+		// PreCompute minimum boundary box
+		this.compute_aabb();
 
-		if (this.constrain)
-			this.clsnr.narrowToCanvas(this);
+		// Apply collision
+		this.clsnr.compute(this);
 
-		if (this.colliding.y)
-			this.apply_friction();
+		// Apply canvas constrain
+		this.clsnr.contrain(this);
 
+		// Apply friction if shape colliding on a surface
+		this.apply_friction();
+
+		// Compute an user readable motion status
 		this.motion_state();
 
+		// Execute an user function, after all calculation
 		if (this.__outframe)
 			this.__outframe();
 
@@ -180,10 +188,11 @@ _Shape = (function() {
 			c.fill();
 		}
 
-		c.restore();
+		c.fillStyle = "#444";
+		c.font = "normal 11px Arial";
+		c.fillText(this.colliding.y, -25, -1);
 
-/*		if (this.colliding.state)
-			__g.stop();*/
+		c.restore();
 
 		this.apply_old();
 	}
@@ -194,7 +203,7 @@ _Shape = (function() {
 		{
 			c.fillStyle = "#444";
 			c.font = "normal 11px Arial";
-			c.fillText(this.motion.dir.v +'/'+this.motion.dir.h, -10, -5);
+			c.fillText(this.motion.y +'/'+this.motion.x, -10, -5);
 		}
 
 		// bounds
@@ -246,157 +255,18 @@ _Shape = (function() {
 	}
 
 	Shape.prototype.apply_friction = function() {
-		this.velocity.x = this.velocity.x / this.phy.friction;
-		this.velocity.y = this.velocity.y / this.phy.friction;
-	}
+		if (!this.colliding.state)
+			return;
 
-	Shape.prototype.apply_constraint = function() {
-	}
-
-	Shape.prototype.check_collision = function() {
-		var _i, _hit, _b, _o, _olen;
-
-		_b = this.aabb;
-		_o = __g.shapes;
-		_olen = _o.length;
-
-		for (var _i in _o) {
-			var _oi = _o[_i];
-			if (_oi.id === this.id)
-				continue;
-
-			var _oib =_oi.aabb;
-			var cld = {x: null, y: null};
-
-			if (this.clsnr.isCandidate(_b, _oib))
-			{
-			}
-			else{
-				//this.colliding.state = true;
-				_oi.colliding.state = true;
-				this.clsnr.compute(this, _oi);
-				//__g.stop();
-				//break;
-			}
+		if (this.has.friction.x && this.colliding.y) {
+			this.velocity.x = this.velocity.x / this.phy.friction;
+			//console.log('friX')
 		}
-	}
-	Shape.prototype.compute_collision = function(fs) {
-		//if (diff.x)
-			//this.position.x -= Math.abs(overlap.x);
 
-		//console.log(overlap.y, overlap.x, diff);
-
-/*		// vector border to border
-		console.log(b2b);
-
-
-		var m1 = this.aabb.rmin.x + this.aabb.rmax.x;
-		var m2 = fs.aabb.rmin.x + fs.aabb.rmax.x;
-
-		if ((this.aabb.rmax.y == fs.aabb.rmin.y) && Math.abs(b2b.x) > 0)
-		{
-			this.colliding.y = true;
-			if (c2c.y > 0)
-				this.position.y -= Math.abs(b2b.y);
-			else
-				this.velocity.y = Math.abs(this.velocity.y);
+		if (this.has.friction.y && this.colliding.x) {
+			this.velocity.y = this.velocity.y / this.phy.friction;
+			console.log('friY', this.has.friction, this.colliding)
 		}
-		else if (this.aabb.rmax.y > fs.aabb.rmin.y && Math.abs(b2b.y) > 0){
-			//console.log(m1, m2, m2 - m1, fs.width + this.width, b2b.x);
-			//__g.stop();
-			//console.log(Math.abs(b2b.y), Math.abs(b2b.x))
-
-			//console.log((fs.center.y + fs.position.y), (this.center.y + this.position.y))
-			//console.log(c2c, b2b, this.aabb.rmax.y, fs.aabb.rmin.y, (this.height/2), (fs.height/2), ((this.height/2) + (fs.height/2)), c2c.y, b2b.y)
-			this.colliding.x = true;
-			//this.position.x = c2c.x > 0 ? fs.aabb.rmin.x - this.width : fs.aabb.rmax.x;
-
-		}*/
-/*		console.log(this.velocity, this.center, _oi.center);
-		console.log(this.center.x + __g.ctxW, this.center.y + __g.ctxH)
-		console.log(_oi.center.x + __g.ctxW, _oi.center.y + __g.ctxH)*/
-
-
-/*		var v = new _Point(0,0);
-		v.x = (this.center.x + this.position.x) - (fs.center.x + fs.position.x);
-		v.y = (this.center.y + this.position.y) - (fs.center.y + fs.position.y);
-		v.normalize();
-
-		var overlap = new _Point(0,0);
-		overlap.x = (this.aabb.rmax.x - this.aabb.rmin.x) - (fs.aabb.rmax.x - fs.aabb.rmin.x);
-		overlap.y = (this.aabb.rmax.y - this.aabb.rmin.y) - (fs.aabb.rmax.y - fs.aabb.rmin.y);
-		console.log(overlap);
-
-		if (overlap.y)
-		{
-			this.colliding.y = true;
-			if (v.y < 0){
-				this.position.y = fs.aabb.rmin.y - this.height;
-				this.velocity.y *= -1;
-			}
-			else if (v.y > 0){
-				this.velocity.y = Math.abs(this.velocity.y);
-			}
-		} else {
-			this.colliding.x = true;
-			// Right
-			if (v.x < 0){
-				this.position.x = fs.aabb.rmin.x - this.width;
-				this.velocity.x *= -1 * this.phy.restitution;
-			}
-			// Left
-			else if (v.x > 0){
-				this.position.x = fs.aabb.rmax.x;
-				this.velocity.x *= -1 * this.phy.restitution;
-			}
-		}*/
-
-
-/*
-		var distance = fs.aabb.rmin.y - this.aabb.rmax.y;
-		var time = Math.abs(distance / this.velocity.y);
-		if (v.x < 0 && this.velocity.x)
-			this.position.x = _oi.aabb.rmax.x - this.width;
-		else if (v.x > 0 && this.velocity.x)
-			this.position.x = _oi.aabb.rmin.x;
-*/
-
-/*		if(time > 0 && time < 2) {
-			this.position.y = _oi.aabb.rmin.y - this.height;
-			this.velocity.y *= -1 * this.phy.restitution;
-		}
-		else if (time <= 0 || distance < 0){
-			this.position.y = _oi.aabb.rmin.y - this.height;
-			this.velocity.y *= this.phy.restitution + _oi.phy.restitution;
-		}
-		if (this.aabb.rmax.x - _oi.aabb.rmin.x && this.aabb.rmax.y > _oi.aabb.rmin.y)
-		{
-			var nx = (this.aabb.rmax.x - _oi.aabb.rmin.x);
-			console.log(nx);
-			if (this.old.motion.dir.h == 'left')
-				this.position.x += nx;
-			else if (this.old.motion.dir.h == 'right')
-				this.position.x -= nx;
-		}*/
-			//console.log(_oi._bounds.rmin.x, this.aabb.rmax.x, this.aabb.rmax.x - _oi._bounds.rmin.x)
-		/*
-		vX = (this.velocity.x || this.phy.restitution);
-		vY = (this.velocity.y || this.phy.restitution);
-
-		vY = vY * (this.phy.restitution * this.phy.mass);
-		this.velocity.y *= -vY;
-		console.log(this.velocity.y, this.position.y)
-		//console.log(this.velocity.y);
-
-		vX = (vX + ((vX * this.phy.restitution)*-1) / (this.phy.restitution * this.phy.mass) * -1);
-		vY = (vY + ((vY * this.phy.restitution)*-1) / (this.phy.restitution * this.phy.mass) * -1);
-
-		vY -= vY;
-
-		//this.velocity.x = vX;
-		this.velocity.y = vY;*/
-
-		//window.cancelAnimationFrame(request_id);
 	}
 
 	Shape.prototype.motion_state = function() {
@@ -405,22 +275,22 @@ _Shape = (function() {
 		_o = this.old;
 
 		if (_n.x != _o.pos.x)
-			this.motion.dir.h = (_o.pos.x < _n.x) ? 'right' : 'left';
+			this.motion.x = (_o.pos.x < _n.x) ? 'right' : 'left';
 		else
-			this.motion.dir.h = 'static';
+			this.motion.x = 'static';
 
 		if (_n.y != _o.pos.y)
-			this.motion.dir.v = (_o.pos.y < _n.y) ? 'down' : 'up';
+			this.motion.y = (_o.pos.y < _n.y) ? 'down' : 'up';
 		else if (_n.y == _o.pos.y && !this.colliding.y)
-			this.motion.dir.v = 'up';
+			this.motion.y = 'up';
 		else
-			this.motion.dir.v = 'static';
+			this.motion.y = 'static';
 
 
-		if (_n.y != _o.pos.y || _n.x != _o.pos.x || this.motion.dir.v || this.motion.dir.h){
-			this.motion.is = true;
+		if (_n.y != _o.pos.y || _n.x != _o.pos.x || this.motionx || this.motion.y){
+			this.motion.state = true;
 		} else {
-			this.motion.is = false;
+			this.motion.state = false;
 		}
 	}
 

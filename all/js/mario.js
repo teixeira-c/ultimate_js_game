@@ -1,13 +1,14 @@
 _Mario = (function() {
 	function Mario(opts) {
-		opts.restitution = 0.05;
-		opts.constrain = true;
+		opts.restitution = 0;
+		opts.contrain = true;
 		opts.sprites = {
 			default: __g.rsc.get('sprites', 'mario_idle'),
 			walking_right: __g.rsc.get('sprites', 'mario_walking'),
 			jumping: __g.rsc.get('sprites', 'mario_jumping'),
 		};
 		opts.fillColor = '#69D2E7';
+		opts.frictionY = false;
 		this.jump = {
 			double: true,
 			min: 300,
@@ -37,7 +38,7 @@ _Mario = (function() {
 		});
 
 		__g.input.register('SPACE UP', function() {
-			if (that.motion.dir.v == 'static' && ((__g.time - that.jump.last) > that.jump.min))
+			if (that.motion.y == 'static' && ((__g.time - that.jump.last) > that.jump.min))
 			{
 				that.__action('jumping', 'jumping');
 				that.position.y -= 1;
@@ -51,7 +52,7 @@ _Mario = (function() {
 
 	Mario.prototype.__onenter = function() {
 
-		if (this.actions.jumping && this.motion.dir.v == 'static'){
+		if (this.actions.jumping && this.motion.y == 'static'){
 			this.actions.jumping = false;
 			that.__sprite('default');
 		}
