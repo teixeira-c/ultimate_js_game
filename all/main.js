@@ -38,7 +38,8 @@ __g.rsc.screen('load_main', function(e){
 __g.rsc.load({
 	img: [
 		['mario.png', 'sprt_mario'],
-		['tiles.jpg', '#']
+		['tiles.jpg', '#'],
+		['bloc.jpg', 'b']
 	],
 	map: [
 		['lvl_2']
