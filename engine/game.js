@@ -23,6 +23,8 @@ var Game = (function() {
 		this.shapes = [];
 		this.myShapes = [];
 
+		this.polyfillRAF();
+
 		Input.call(this);
 		this.env.new();
 	}
@@ -31,6 +33,14 @@ var Game = (function() {
 	Game.prototype.env = Env.prototype;
 	Game.prototype.rsc = Ressources.prototype;
 
+	Game.prototype.polyfillRAF = function() {
+		var vendors = ['ms', 'moz', 'webkit', 'o'];
+	    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+	        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+	        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+	                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+	    }
+	}
 	Game.prototype.play = function() {
 		this.raf = window.requestAnimationFrame(this.loop, this.cnvs);
 	}

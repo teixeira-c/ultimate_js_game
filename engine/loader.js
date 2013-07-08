@@ -120,7 +120,7 @@ var Loader = (function() {
 		var xhr = new XMLHttpRequest();
 		var that = this;
 
-		xhr.open("GET", file[0], false);
+		xhr.open("GET", file[0], true);
 		xhr.onreadystatechange = function()
 		{
 			if (xhr.readyState == 4)
