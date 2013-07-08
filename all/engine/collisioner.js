@@ -34,11 +34,9 @@ var Collisioner = (function() {
 	}
 
 	Collisioner.prototype.compute = function(s1) {
-		var i, slen;
-		slen = __g.shapes.length;
-
-		for (var i in __g.shapes) {
-			var s2 = __g.shapes[i];
+		var sn = __g.rsc.list.shapes.all;
+		for (var i in sn) {
+			var s2 = sn[i];
 			if (s2.id === s1.id)
 				continue;
 
@@ -47,24 +45,31 @@ var Collisioner = (function() {
 				continue;
 			}
 			else{
+				if (s2.has.collision)
+					this.apply(s1, s2);
+
+				if (typeof s1.__onCollide == 'function')
+					s1.__onCollide(s2);
+				if (typeof s2.__onCollide == 'function')
+					s2.__onCollide(s1, i);
+
 				s1.colliding.state = true;
 				s2.colliding.state = true;
-				this.apply(s1, s2);
 			}
 		}
 	}
 
 	Collisioner.prototype.apply = function(s1, s2) {
 		// vector center to center
-		var c2c = new _Point(0,0);
+		var c2c = new Vector(0,0);
 		c2c.x = (s2.center.x + s2.position.x) - (s1.center.x + s1.position.x);
 		c2c.y = (s2.center.y + s2.position.y) - (s1.center.y + s1.position.y);
 
-		var overlap = new _Point(0,0);
+		var overlap = new Vector(0,0);
 		overlap.x = Math.abs(c2c.x) - (s1.width/2) - (s2.width/2);
 		overlap.y = Math.abs(c2c.y) - (s1.height/2) - (s2.height/2);
 
-		var diff = new _Point(0,0);
+		var diff = new Vector(0,0);
 		diff.x = s1.position.x - s1.old.pos.x;
 		diff.y = s1.position.y - s1.old.pos.y;
 

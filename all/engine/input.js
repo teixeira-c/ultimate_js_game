@@ -1,9 +1,12 @@
 Input = (function() {
 	function Input() {
 	    document.addEventListener('keydown', function(e) {
-	        __g.input.setkey(e, true);
-	        e.preventDefault();
-	        return false;
+	        var r = __g.input.setkey(e, true);
+	        if (r)
+	        {
+		        e.preventDefault();
+		        return false;
+		    }
 	    });
 	    document.addEventListener('keyup', function(e) {
 	        __g.input.setkey(e, false);
@@ -60,8 +63,6 @@ Input = (function() {
 	            key = 'RIGHT'; break;
 	        case 40:
 	            key = 'DOWN'; break;
-	        default:
-	            key = String.fromCharCode(code);
         }
 
         if (status === true && !this.key[key])
@@ -75,6 +76,7 @@ Input = (function() {
         	delete this.key[key];
         }
         this.publish(rs, key);
+        return key;
 	}
 
 	Input.prototype.isDown = function(name) {

@@ -1,46 +1,21 @@
 var o_id = 0;
 var colors = ['#0DB2AC', '#F5DD7E', '#FC8D4D', '#FC694D', '#69D2E7', '#A7DBD8', '#E0E4CC'];
 
-_Point = (function() {
-	function Point(x, y) {
-		this.set(x, y);
-	}
-	Point.prototype.set = function(x, y) {
-		this.x = x || 0;
-		this.y = y || 0;
-	}
-	Point.prototype.min = function(point) {
-		this.x = Math.min(this.x, point.x);
-      	this.y = Math.min(this.y, point.y);
-	}
-	Point.prototype.max = function(point) {
-		this.x = Math.max(this.x, point.x);
-      	this.y = Math.max(this.y, point.y);
-	}
-	Point.prototype.normalize = function() {
-		var mag = Math.sqrt(this.x * this.x + this.y * this.y);
-		if (mag !== 0) {
-			this.x /= mag;
-			this.y /= mag;
-		}
-	}
-	Point.prototype.dotproduct = function(vector) {
-		return this.x * vector.x + this.y * vector.y;
-	}
-	return Point;
-})();
-
-_Shape = (function() {
+var Shape = (function() {
 	function Shape(opts) {
 		if (!opts || !opts.points)
 			throw "no points given";
 
-		this.id = o_id++;
+		if (!opts.blueprint)
+			this.id = o_id++;
+		else
+			this.opts = opts;
+		this.is = opts.is || false;
 
 		this.has = {
 			gravity: opts.gravity || true,
 			friction: {x: true, y: true},
-			collision: opts.collision || true,
+			collision: (opts.hasCollision !== undefined) ? opts.hasCollision : true,
 			contrain: opts.contrain || false
 		}
 		if (opts.frictionY !== undefined) this.has.friction.y = opts.frictionY;
@@ -59,39 +34,46 @@ _Shape = (function() {
 		this.points = opts.points;
 		this.ptslen = this.points.length;
 		this.fillColor = opts.fillColor || colors[Math.floor(Math.random()*colors.length)];
-		this.height = 0;
-		this.width = 0;
-		this.center = new _Point();
+		this.height = opts.height || 0;
+		this.width = opts.width || 0;
+		this.center = new Vector();
 		this.radius = 0;
 
 		// state
+		this.state = opts.state || 'passive';
 		this.motion = {
 			state: 'static', x: false, y: false
 		};
 		this.size = {x: 0, y: 0};
-		this.position = new _Point(opts.x, opts.y);
-		this.velocity = new _Point(0, 0);
+		this.position = new Vector(opts.x, opts.y);
+		this.velocity = new Vector(0, 0);
 		this.colliding = {
 			state: false, x: false, y: false
 		};
-		this.rsc = opts.rsc || false;
+
+		this.rsc = opts.rsc ? ((opts.rsc instanceof Sprite) ? opts.rsc : __g.rsc.get(opts.rsc)) : false;
 		this.old =  {
-			pos: new _Point(opts.x, opts.y),
+			pos: new Vector(opts.x, opts.y),
 			motion: this.motion,
 			cld: false,
-			velocity: new _Point(0, 0)
+			velocity: new Vector(0, 0)
 		};
 
 		// bounds
 		this.trueBounds = false; // Fit to shape or use only _bounds
 		this.aabb = {
-			min: new _Point(), max: new _Point(),
-			rmin: new _Point(), rmax: new _Point()
+			min: new Vector(), max: new Vector(),
+			rmin: new Vector(), rmax: new Vector()
 		};
 
 		this.compute_aabb();
 
-		__g.shapes.push(this);
+		if (!opts.OOTL) {
+			if (!opts.blueprint)
+				__g.rsc.addShape(this);
+			else
+				__g.rsc.set('blueprint', opts.name, this);
+		}
 	}
 
 	Shape.prototype.clsnr = Collisioner.prototype;
@@ -106,8 +88,8 @@ _Shape = (function() {
 
 	Shape.prototype.compute = function() {
 		// Execute an user function, before everything.
-		if (this.__onframe)
-			this.__onframe();
+		if (this.__onFrame)
+			this.__onFrame();
 
 		// Apply gravity to shapes
 		if (this.has.gravity)
@@ -129,11 +111,11 @@ _Shape = (function() {
 		this.motion_state();
 
 		// Execute an user function, after all calculation
-		if (this.__outframe)
-			this.__outframe();
+		if (this.__outFrame)
+			this.__outFrame();
 
-		if (this.__onenter)
-			this.__onenter();
+		if (this.__onEnter)
+			this.__onEnter();
 	}
 
 	Shape.prototype.compute_aabb = function() {
@@ -169,11 +151,11 @@ _Shape = (function() {
 			this.display_helpers();
 
 
-		if (typeof this.rsc == 'object')
+		if (this.rsc && !__g.debug)
 		{
-			if (typeof this.rsc.render == 'function')
+			if (typeof this.rsc.render == 'function') {
 				this.rsc.render();
-			else{
+			} else {
 				c.drawImage(this.rsc,0, 0,36, 36);
 			}
 		}
@@ -188,10 +170,6 @@ _Shape = (function() {
 			c.fill();
 		}
 
-		c.fillStyle = "#444";
-		c.font = "normal 11px Arial";
-		c.fillText(this.colliding.y, -25, -1);
-
 		c.restore();
 
 		this.apply_old();
@@ -199,7 +177,7 @@ _Shape = (function() {
 
 	Shape.prototype.display_helpers = function() {
 		var c = __g.ctx;
-		if (this.is_char === true)
+		if (this.is === 'char')
 		{
 			c.fillStyle = "#444";
 			c.font = "normal 11px Arial";
@@ -223,12 +201,17 @@ _Shape = (function() {
 		c.stroke();
 		c.closePath();
 
-		// circle
 		c.beginPath();
+		c.arc(this.center.x, this.center.y, 2, 0, 2*Math.PI);
+		c.stroke();
+		c.closePath();
+
+		// circle
+/*		c.beginPath();
 		c.arc(this.center.x, this.center.y, 2, 0, 2*Math.PI);
 		c.arc(this.center.x, this.center.y, this.radius, 0, 2*Math.PI);
 		c.stroke();
-		c.closePath();
+		c.closePath();*/
 
 		c.globalAlpha = 0.5;
 	}
@@ -260,12 +243,10 @@ _Shape = (function() {
 
 		if (this.has.friction.x && this.colliding.y) {
 			this.velocity.x = this.velocity.x / this.phy.friction;
-			//console.log('friX')
 		}
 
 		if (this.has.friction.y && this.colliding.x) {
 			this.velocity.y = this.velocity.y / this.phy.friction;
-			console.log('friY', this.has.friction, this.colliding)
 		}
 	}
 

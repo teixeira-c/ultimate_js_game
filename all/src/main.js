@@ -51,9 +51,9 @@ __g.rsc.load({
 function onReady() {
 
 	/************************ SPRITES *****************/
-	__g.rsc.sprites('mario_idle', 'sprt_mario', new _Point(0,0), new _Point(24,29), 1);
-	__g.rsc.sprites('mario_walking', 'sprt_mario', new _Point(0,30), new _Point(24,29), 6);
-	__g.rsc.sprites('mario_jumping', 'sprt_mario', new _Point(0,62), new _Point(24,29), 3);
+	__g.rsc.sprites('mario_idle', 'sprt_mario', new Vector(0,0), new Vector(24,29), 1);
+	__g.rsc.sprites('mario_walking', 'sprt_mario', new Vector(0,30), new Vector(24,29), 6);
+	__g.rsc.sprites('mario_jumping', 'sprt_mario', new Vector(0,62), new Vector(24,29), 3);
 
 	/************************ MAP *****************/
 	__g.map = new _Map();
@@ -65,13 +65,13 @@ function onReady() {
 	/*var obj1 = new _Shape({
 		x: 250, y: 250, fillColor: '#0DB2AC',
 		points: [
-			new _Point(0,0),
-			new _Point(23,18),
-			new _Point(35,55),
-			new _Point(41,9),
-			new _Point(45,-17),
-			new _Point(33,-25),
-			new _Point(28,-13)
+			new Vector(0,0),
+			new Vector(23,18),
+			new Vector(35,55),
+			new Vector(41,9),
+			new Vector(45,-17),
+			new Vector(33,-25),
+			new Vector(28,-13)
 		],
 		mass: 0.05, restitution: 1, constrain: true
 	});*/
@@ -80,10 +80,10 @@ function onReady() {
 	var char2 = new _Mario({
 		x: 457, y: 415,
 		points: [
-			new _Point(0,0),
-			new _Point(24,0),
-			new _Point(24,29),
-			new _Point(0,29),
+			new Vector(0,0),
+			new Vector(24,0),
+			new Vector(24,29),
+			new Vector(0,29),
 		],
 	});
 	__g.myShapes.push(char2);
@@ -93,10 +93,10 @@ function onReady() {
 		mass: 5, restitution: 0.5, constrain: true,
 		rsc: myRsc.get('sprites', 'mario_walking'),
 		points: [
-			new _Point(0,0),
-			new _Point(24,0),
-			new _Point(24,29),
-			new _Point(0,29),
+			new Vector(0,0),
+			new Vector(24,0),
+			new Vector(24,29),
+			new Vector(0,29),
 		],
 	});
 	myObjects.push(char1);
@@ -106,10 +106,10 @@ function onReady() {
 		mass: 5, restitution: 0, constrain: true,
 		rsc: myRsc.get('sprites', 'mario_walking'),
 		points: [
-			new _Point(0,0),
-			new _Point(24,0),
-			new _Point(24,29),
-			new _Point(0,29),
+			new Vector(0,0),
+			new Vector(24,0),
+			new Vector(24,29),
+			new Vector(0,29),
 		],
 	});
 	myObjects.push(obj2);
@@ -118,10 +118,10 @@ function onReady() {
 		x: 375, y: 185, fillColor: '#57d68d',
 		mass: 5, restitution: 0.3, constrain: true,
 		points: [
-			new _Point(0,0),
-			new _Point(30,0),
-			new _Point(30,50),
-			new _Point(0,50),
+			new Vector(0,0),
+			new Vector(30,0),
+			new Vector(30,50),
+			new Vector(0,50),
 		],
 	});
 	myObjects.push(obj3);*/

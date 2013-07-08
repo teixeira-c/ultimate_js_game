@@ -7,7 +7,7 @@ var _Map = (function() {
 			height: 36
 		};
 		this.views = {};
-		this.current_view_id = 0;
+		this.current_view = false;
 
 		this.hero = shape_obj || false;
 		this.camera = {
@@ -20,13 +20,20 @@ var _Map = (function() {
 		this.cld_zone = {};
 	}
 
-	Map.prototype.add_view = function(name, json) {
-		this.views[name] = json;
+	Map.prototype.add_view = function(name) {
+		if (view = __g.rsc.get('lvl', name))
+			this.views[name] = view;
+		else
+			throw 'No view for ' + name;
 	}
 
-	Map.prototype.set_current_view = function(id) {
-		this.current_view_id = typeof this.views[id] != 'undefined' ? id : 0;
-		if (this.views[this.current_view_id].inited == false)
+	Map.prototype.set_current_view = function(name) {
+		if (typeof this.views[name] == 'undefined')
+			throw "Missing view in this map";
+
+		this.current_view = name;
+
+		if (this.views[this.current_view].inited == false)
 			this.init_view();
 	}
 
@@ -36,7 +43,7 @@ var _Map = (function() {
 	}
 
 	Map.prototype.init_view = function() {
-		var v = this.views[this.current_view_id];
+		var v = this.views[this.current_view];
 		var _ch, _cw, _cr, _cc, _cl;
 		var _tw = this.tiles.width;
 		var _th = this.tiles.height;
@@ -52,10 +59,22 @@ var _Map = (function() {
 				_cw = col * _tw;
 				if (_cc != "" && _cc != " ")
 				{
-					img = __g.rsc.get('img', _cc);
-					v.tiles.push(new _Tile( _cw, _ch, _tw, _th, img));
+					if (tile = __g.rsc.get('blueprint', _cc)) {
+						v.tiles.push(tile.clone(_cw, _ch));
+					} else if (img = __g.rsc.get('img', _cc)) {
+						v.tiles.push(new _Tile(_cw, _ch, _tw, _th, img));
+					}
 				}
 			}
+		}
+
+		if (v.spec)
+		{
+			for (var i = 0, l = v.spec.length; i < l; i++) {
+				if (bp = __g.rsc.get('blueprint', v.spec[i].blueprint)) {
+					var t = bp.clone(v.spec[i].pos[0] * _tw, v.spec[i].pos[1]* _th);
+				}
+			};
 		}
 		v.inited = true;
 	}
@@ -99,7 +118,7 @@ var _Map = (function() {
 	}*/
 
 	Map.prototype.draw_layers = function(type) {
-		var v = this.views[this.current_view_id];
+		var v = this.views[this.current_view];
 		var _l;
 
 		for(var index in v.layers) {
@@ -112,16 +131,10 @@ var _Map = (function() {
 			if (img = myRsc.get('img', _l.rsc))
 				ctx.drawImage(img, 0, 0, img.width, img.height);
 		}
-
 	}
 
-
 	Map.prototype.draw_tiles = function(name) {
-		var v = this.views[this.current_view_id];
-		var _ch, _cw, _cr, _cc;
-		var _tw = this.tiles.width;
-		var _th = this.tiles.height;
-		//console.log(v);
+		var v = this.views[this.current_view];
 
 		for (var index in v.tiles) {
 			v.tiles[index].draw();

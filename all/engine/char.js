@@ -1,14 +1,15 @@
 _Char = (function() {
 	function Char(opts) {
-		this.is_char = true;
+		opts.is = 'char';
+		opts.state = 'active';
 		this.actions = {};
 		this.sprites = opts.sprites || {};
 		this.douple_jump = opts.douple_jump || false;
 
-		_Shape.call(this, opts);
+		Shape.call(this, opts);
 	}
 
-	Char.prototype = _Shape.prototype;
+	Char.prototype = Shape.prototype;
 
 	Char.prototype.__action = function(name, sprite) {
 		this.actions[name] = true;
@@ -26,9 +27,10 @@ _Char = (function() {
 		this.idle = true;
 	}
 
-	Char.prototype.__onframe = null;
-	Char.prototype.__outframe = null;
-	Char.prototype.__onenter = null;
+	Char.prototype.__onFrame = null;
+	Char.prototype.__outFrame = null;
+	Char.prototype.__onEnter = null;
+	Char.prototype.__onCollide = null;
 
 	return Char;
 })();

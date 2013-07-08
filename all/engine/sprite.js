@@ -1,6 +1,4 @@
-
-
-_Sprite = (function() {
+var Sprite = (function() {
 	function Sprite(ressource, start, size, frames, fps, orientation) {
 		this.rsc = ressource;
 		this.start = start;
@@ -12,13 +10,21 @@ _Sprite = (function() {
 		this.index = 0;
 		this.speed = 0;
 		this.loop = 0;
+		this.animated = frames.length === 1 ? false : true;
+
+		if (this.frames.length === 1)
+			this.render = this._renderStatic;
+		else
+			this.render = this._renderAnimated;
 	}
 
 	Sprite.prototype.precompile = function(f) {
 		var _a = [], _t = [], _x, _y;
 		if (typeof f === 'number')
 		{
-			for (var i = 0; i < f; i++) { _t.push(i) };
+			for (var i = 0; i < f; i++){
+				_t.push(i);
+			}
 			f = _t;
 		}
 
@@ -34,7 +40,7 @@ _Sprite = (function() {
 			else
 				_x = this.start.x + (this.size.x * f[index]);
 
-			var _f = new _Point(_x, _y);
+			var _f = new Vector(_x, _y);
 			_a.push(_f);
 		};
 		return _a;
@@ -51,7 +57,16 @@ _Sprite = (function() {
 		return i;
 	}
 
-	Sprite.prototype.render = function() {
+	Sprite.prototype._renderStatic = function() {
+		__g.ctx.drawImage(this.rsc,
+		    this.frames[0].x, this.frames[0].y,
+		    this.size.x, this.size.y,
+		    0, 0,
+		    this.size.x, this.size.y
+		);
+	}
+
+	Sprite.prototype._renderAnimated = function() {
 		var _i = this.onframe();
 
 		var _f = this.frames[_i];

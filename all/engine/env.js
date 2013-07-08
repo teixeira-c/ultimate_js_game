@@ -2,6 +2,8 @@ var Env = (function() {
 	function Env() {}
 
 	Env.prototype.new = function(opts) {
+		opts = opts || {};
+
 		opts.name = opts.name || "default";
 		// Gaz resistance: air=1.22, water=0.33
 		// kg / m^3
