@@ -12,7 +12,7 @@ var mainLoading = new Loader({
 			['src/img/coin.png', 'coin']
 		],
 		lvl: [
-			['src/map/lvl_3.json', 'lvl_3']
+			['src/map/lvl_1.json', 'lvl_1']
 		]
 	},
 	onLoading: null,
@@ -86,8 +86,8 @@ function pre(load)
 
 	// Create map
 	__g.map = new _Map();
-	__g.map.add_view('lvl_3');
-	__g.map.set_current_view('lvl_3');
+	__g.map.add_view('lvl_1');
+	__g.map.set_current_view('lvl_1');
 
 
 	// Create ui
